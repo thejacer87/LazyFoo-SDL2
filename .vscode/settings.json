@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "js_*blade.php": "javascript",
+        "string": "cpp"
+    }
+}
