@@ -51,6 +51,20 @@ int main(int argc, char *args[])
             SDL_Delay( 2000 );
         }
     }
+    //Main loop flag
+    bool quit = false;
+
+    //Event handler
+    SDL_Event e;
+
+    while (!quit){
+        while ( SDL_PollEvent( &e ) != 0) {
+            // User requests quit
+            if (e.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
+    }
 
     //Free resources and close SDL
     close();
