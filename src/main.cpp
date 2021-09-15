@@ -4,10 +4,22 @@ and may not be redistributed without written permission.*/
 //Using SDL and standard IO
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <string>
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
+
+//Key press surfaces constants
+enum KeyPressSurfaces
+{
+    KEY_PRESS_SURFACE_DEFAULT,
+    KEY_PRESS_SURFACE_UP,
+    KEY_PRESS_SURFACE_DOWN,
+    KEY_PRESS_SURFACE_LEFT,
+    KEY_PRESS_SURFACE_RIGHT,
+    KEY_PRESS_SURFACE_TOTAL
+};
 
 //Starts up SDL and creates window
 bool init();
@@ -27,6 +39,15 @@ SDL_Surface *gScreenSurface = NULL;
 //The image we will load and show on the screen
 SDL_Surface *gHelloWorld = NULL;
 
+//Loads individual image
+SDL_Surface *loadSurface(std::string path);
+
+//The images that correspond to a keypress
+SDL_Surface *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
+
+//Current displayed image
+SDL_Surface *gCurrentSurface = NULL;
+
 int main(int argc, char *args[])
 {
 
@@ -44,11 +65,11 @@ int main(int argc, char *args[])
         else
         {
             //Apply the image
-            SDL_BlitSurface( gHelloWorld, NULL, gScreenSurface, NULL );
+            SDL_BlitSurface(gHelloWorld, NULL, gScreenSurface, NULL);
             //Update the surface
-            SDL_UpdateWindowSurface( gWindow );
+            SDL_UpdateWindowSurface(gWindow);
             //Wait two seconds
-            SDL_Delay( 2000 );
+            SDL_Delay(2000);
         }
     }
     //Main loop flag
@@ -57,11 +78,49 @@ int main(int argc, char *args[])
     //Event handler
     SDL_Event e;
 
-    while (!quit){
-        while ( SDL_PollEvent( &e ) != 0) {
+    //Set default current surface
+    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+
+    while (!quit)
+    {
+        while (SDL_PollEvent(&e) != 0)
+        {
             // User requests quit
-            if (e.type == SDL_QUIT) {
+            if (e.type == SDL_QUIT)
+            {
                 quit = true;
+            }
+            //User presses a key
+            else if (e.type == SDL_KEYDOWN)
+            {
+                //Select surfaces based on key press
+                switch (e.key.keysym.sym)
+                {
+                case SDLK_UP:
+                    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
+                    break;
+
+                case SDLK_DOWN:
+                    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
+                    break;
+
+                case SDLK_LEFT:
+                    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
+                    break;
+
+                case SDLK_RIGHT:
+                    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+                    break;
+
+                default:
+                    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+                    break;
+                }
+                //Apply the current image
+                SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL);
+
+                //Update the surface
+                SDL_UpdateWindowSurface(gWindow);
             }
         }
     }
@@ -107,13 +166,43 @@ bool loadMedia()
     //Loading success flag
     bool success = true;
 
-    const char* filePath = "tutorials/02_getting_an_image_on_the_screen/assets/hello_world.bmp";
-
-    //Load splash image
-    gHelloWorld = SDL_LoadBMP(filePath);
-    if (gHelloWorld == NULL)
+    //Load default surface
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("tutorials/04_key_presses/assets/press.bmp");
+    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == NULL)
     {
-        printf("Unable to load image %s! SDL Error: %s\n", filePath, SDL_GetError());
+        printf("Failed to load default image!\n");
+        success = false;
+    }
+
+    //Load up surface
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("tutorials/04_key_presses/assets/up.bmp");
+    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] == NULL)
+    {
+        printf("Failed to load up image!\n");
+        success = false;
+    }
+
+    //Load down surface
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("tutorials/04_key_presses/assets/down.bmp");
+    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] == NULL)
+    {
+        printf("Failed to load down image!\n");
+        success = false;
+    }
+
+    //Load left surface
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("tutorials/04_key_presses/assets/left.bmp");
+    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] == NULL)
+    {
+        printf("Failed to load left image!\n");
+        success = false;
+    }
+
+    //Load right surface
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("tutorials/04_key_presses/assets/right.bmp");
+    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] == NULL)
+    {
+        printf("Failed to load right image!\n");
         success = false;
     }
 
@@ -132,4 +221,16 @@ void close()
 
     //Quit SDL subsystems
     SDL_Quit();
+}
+
+SDL_Surface *loadSurface(std::string path)
+{
+    //Load image at specified path
+    SDL_Surface *loadedSurface = SDL_LoadBMP(path.c_str());
+    if (loadedSurface == NULL)
+    {
+        printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+    }
+
+    return loadedSurface;
 }
